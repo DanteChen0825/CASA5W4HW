@@ -1,0 +1,96 @@
+---
+title: "CASA5W4HW"
+author: "Zhiang Chen"
+date: "2022-10-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(sf)
+library(tmap)
+library(tmaptools)
+library(RSQLite)
+library(tidyverse)
+```
+
+```{r}
+# read shape file
+shape <- st_read("data/World_Countries_(Generalized)/World_Countries__Generalized_.shp")
+```
+
+```{r}
+library(countrycode)
+```
+
+```{r}
+# mutate shape file 2 characters ISO to 3 characters ISO
+shape$ISO3 <- countrycode(shape$ISO, origin = 'iso2c', destination = 'iso3c') 
+```
+
+
+```{r}
+# shape %>% st_geometry() %>% plot()
+```
+
+
+
+
+
+```{r}
+# read gender index
+gii_data_raw <- read_csv("data/HDR21-22_Composite_indices_complete_time_series.csv")  
+```
+
+```{r}
+# select column
+gii_data_raw_2 <- select(gii_data_raw, iso3, country, gii_2010, gii_2019)
+
+# delete non-country column
+gii_data_raw_3 <- head(gii_data_raw_2, - 11) 
+
+# caculate the difference between 2010 and 2019
+gii_data_raw_3$diff <- gii_data_raw_3$gii_2019-gii_data_raw_3$gii_2010
+
+final_data <- select(gii_data_raw_3, iso3, diff)
+```
+
+```{r}
+# join data
+shape2 <- shape %>%
+  merge(.,
+        final_data,
+        by.x="ISO3", 
+        by.y="iso3",
+        all.x=TRUE)
+```
+
+
+
+```{r}
+tmap_mode("plot")
+# change the fill to your column name if different
+shape2 %>%
+  qtm(.,fill = "diff")
+
+#, fill.palette="-Reds"
+```
+
+```{r}
+tm_shape(shape2) + 
+tm_polygons("diff", 
+        style="pretty",
+        palett="Pastel1",
+        midpoint=NA,
+        title="Change in GII 2010 to 2019") +
+  tm_layout(title = "Gender Inequality in Decade", legend.position = c("left", "bottom"))
+```
+
+
+
+
