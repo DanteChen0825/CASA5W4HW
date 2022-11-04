@@ -1,7 +1,7 @@
 ---
-title: "CASA5W4HW"
-author: "Zhiang Chen"
-date: "2022-10-26"
+title: "Forked HW"
+author: "Matthew Martignoni, Zhiang Chen"
+date: "2022-11-4"
 output: pdf_document
 ---
 
@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
+### Setting Libraries
 
 ```{r}
 library(sf)
@@ -17,37 +17,30 @@ library(tmap)
 library(tmaptools)
 library(RSQLite)
 library(tidyverse)
+library(leaflet)
+library(leafpop)
+library(janitor)
+library(dplyr)
+library(readr)
+library(OpenStreetMap)
+library(countrycode)
 ```
+
+### Reading in Data
 
 ```{r}
 # read shape file
 shape <- st_read("data/World_Countries_(Generalized)/World_Countries__Generalized_.shp")
+
+# read gender index data
+gii_data_raw <- read_csv("data/HDR21-22_Composite_indices_complete_time_series.csv") 
 ```
 
-```{r}
-library(countrycode)
-```
-
+### Manipulating Data
 ```{r}
 # mutate shape file 2 characters ISO to 3 characters ISO
-shape$ISO3 <- countrycode(shape$ISO, origin = 'iso2c', destination = 'iso3c') 
-```
+shape$ISO3 <- countrycode(shape$ISO, origin = 'iso2c', destination = 'iso3c')
 
-
-```{r}
-# shape %>% st_geometry() %>% plot()
-```
-
-
-
-
-
-```{r}
-# read gender index
-gii_data_raw <- read_csv("data/HDR21-22_Composite_indices_complete_time_series.csv")  
-```
-
-```{r}
 # select column
 gii_data_raw_2 <- select(gii_data_raw, iso3, country, gii_2010, gii_2019)
 
@@ -55,11 +48,16 @@ gii_data_raw_2 <- select(gii_data_raw, iso3, country, gii_2010, gii_2019)
 gii_data_raw_3 <- head(gii_data_raw_2, - 11) 
 
 # caculate the difference between 2010 and 2019
-gii_data_raw_3$diff <- gii_data_raw_3$gii_2019-gii_data_raw_3$gii_2010
+# I've changed the order of calculating difference because now it will show the *decrease* in inequality, so now the increase of equality. If you look at the data, there was more inequality in 2010 and there is less today 
+gii_data_raw_3$diff <- gii_data_raw_3$gii_2010-gii_data_raw_3$gii_2019
 
-final_data <- select(gii_data_raw_3, iso3, diff)
+#change to percent increase/decrease so the map is more easily understandable
+gii_data_raw_3$diff_percent <- gii_data_raw_3$diff*100
+
+final_data <- select(gii_data_raw_3, iso3, diff_percent)
 ```
 
+### Joining Data
 ```{r}
 # join data
 shape2 <- shape %>%
@@ -70,27 +68,26 @@ shape2 <- shape %>%
         all.x=TRUE)
 ```
 
-
-
-```{r}
-tmap_mode("plot")
-# change the fill to your column name if different
-shape2 %>%
-  qtm(.,fill = "diff")
-
-#, fill.palette="-Reds"
-```
-
+### Initial Map Making
 ```{r}
 tm_shape(shape2) + 
-tm_polygons("diff", 
-        style="pretty",
-        palett="Pastel1",
+tm_polygons("diff_percent", 
+        style="jenks",
+        n = 10,
+        palette="RdYlGn",
         midpoint=NA,
-        title="Change in GII 2010 to 2019") +
-  tm_layout(title = "Gender Inequality in Decade", legend.position = c("left", "bottom"))
+        title="Percent Increase",
+        legend.hist=TRUE) +
+  tm_layout(title = "Gender Inequality Increase by Percentage from 2010 to 2019", legend.outside = TRUE)
 ```
 
+### Adding New Maps
+
+```{r}
+
+Map1 <- 
+  
+```
 
 
 
