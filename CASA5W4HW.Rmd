@@ -52,9 +52,9 @@ gii_data_raw_3 <- head(gii_data_raw_2, - 11)
 gii_data_raw_3$diff <- gii_data_raw_3$gii_2010-gii_data_raw_3$gii_2019
 
 #change to percent increase/decrease so the map is more easily understandable
-gii_data_raw_3$diff_percent <- gii_data_raw_3$diff*100
+gii_data_raw_3$percent_increase <- gii_data_raw_3$diff*100
 
-final_data <- select(gii_data_raw_3, iso3, diff_percent)
+final_data <- select(gii_data_raw_3, iso3, percent_increase)
 ```
 
 ### Joining Data
@@ -68,10 +68,10 @@ shape2 <- shape %>%
         all.x=TRUE)
 ```
 
-### Initial Map Making
+### Map Making 1
 ```{r}
 tm_shape(shape2) + 
-tm_polygons("diff_percent", 
+tm_polygons("percent_increase", 
         style="jenks",
         n = 10,
         palette="RdYlGn",
@@ -81,12 +81,13 @@ tm_polygons("diff_percent",
   tm_layout(title = "Gender Inequality Increase by Percentage from 2010 to 2019", legend.outside = TRUE)
 ```
 
-### Adding New Maps
+### Map Making 2
 
 ```{r}
 
-Map1 <- 
-  
+tmap_mode("view")
+
+tm_shape(shape2) + tm_polygons("diff_percent", style="jenks", n = 10, palette="RdYlGn", midpoint=NA, title="Percent Increase")+ tm_layout(title = "Gender Inequality Increase by Percentage from 2010 to 2019", legend.outside = TRUE)
 ```
 
 
